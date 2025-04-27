@@ -1,11 +1,20 @@
 package com.VasquezRojas.controller;
 
+import com.VasquezRojas.Assembler.CoursesAssembler;
+import com.VasquezRojas.Assembler.StudentAsseembler;
+import com.VasquezRojas.DTO.CoursesDTO;
+import com.VasquezRojas.DTO.StudentDTO;
 import com.VasquezRojas.model.Courses;
 import com.VasquezRojas.service.IStudentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.VasquezRojas.model.Student;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -13,29 +22,42 @@ import java.util.List;
 @RequestMapping("/estudiante")
 public class StudentController {
     private final IStudentService service;
+    private final StudentAsseembler assembler;
 
     @GetMapping
-    public List<Student> findAll() throws Exception{
-        return service.findAll();
+    public ResponseEntity<CollectionModel<EntityModel<StudentDTO>>> findAll() throws Exception{
+        List<Student> list= service.findAll();
+        List<EntityModel<StudentDTO>> studentsResource = list.stream()
+                .map(student -> assembler.toModel(student))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(studentsResource));
     }
 
     @GetMapping("/{id}")
-    public Student findById(@PathVariable("id") Integer id) throws Exception{
-        return service.findById(id);
+    public ResponseEntity<EntityModel<StudentDTO>> findById(@PathVariable("id") Integer id) throws Exception {
+        Student est = service.findById(id);
+        EntityModel<StudentDTO> studentsResource = assembler.toModel(est);
+        return ResponseEntity.ok(studentsResource);
     }
 
     @PostMapping
-    public Student save(@RequestBody Student student) throws Exception{
-        return service.save(student);
+    public ResponseEntity<Student> save(@RequestBody Student student) throws Exception{
+        Student est = service.save(student);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(est.getIdStudent()).toUri();
+        return ResponseEntity.created(location).build();
     }
 
     @PutMapping("/{id}")
-    public Student update(@PathVariable("id") Integer id, @RequestBody Student student) throws Exception{
-        return service.update(student, id);
+    public ResponseEntity<EntityModel<StudentDTO>> update(@PathVariable("id") Integer id, @RequestBody Student student) throws Exception {
+        Student est = service.update(student, id);
+        EntityModel<StudentDTO> courseResource = assembler.toModel(est);
+        return ResponseEntity.ok(courseResource);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") Integer id) throws Exception{
+    public ResponseEntity<Void> delete(@PathVariable("id") Integer id) throws Exception{
         service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

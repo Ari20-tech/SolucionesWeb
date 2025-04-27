@@ -1,10 +1,17 @@
 package com.VasquezRojas.controller;
 
+import com.VasquezRojas.Assembler.CoursesAssembler;
+import com.VasquezRojas.DTO.CoursesDTO;
 import com.VasquezRojas.model.Courses;
 import com.VasquezRojas.service.ICoursesService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -12,29 +19,41 @@ import java.util.List;
 @RequestMapping("/cursos")
 public class CoursesController {
     private final ICoursesService service;
+    private final CoursesAssembler assembler;
 
     @GetMapping
-    public List<Courses> findAll() throws Exception{
-        return service.findAll();
+    public ResponseEntity<CollectionModel<EntityModel<CoursesDTO>>> findAll() throws Exception{
+    List<Courses> list= service.findAll();
+        List<EntityModel<CoursesDTO>> coursesResource = list.stream()
+                .map(courses -> assembler.toModel(courses))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(coursesResource));
     }
 
     @GetMapping("/{id}")
-    public Courses findById(@PathVariable("id") Integer id) throws Exception{
-        return service.findById(id);
+    public ResponseEntity<EntityModel<CoursesDTO>> findById(@PathVariable("id") Integer id) throws Exception {
+        Courses cur = service.findById(id);
+        EntityModel<CoursesDTO> coursesResource = assembler.toModel(cur);
+        return ResponseEntity.ok(coursesResource);
     }
 
     @PostMapping
-    public Courses save(@RequestBody Courses courses) throws Exception{
-        return service.save(courses);
+    public ResponseEntity<Courses> save(@RequestBody Courses courses) throws Exception {
+        Courses cur = service.save(courses);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(cur.getIdCourses()).toUri();
+        return ResponseEntity.created(location).build();
     }
 
     @PutMapping("/{id}")
-    public Courses update(@PathVariable("id") Integer id, @RequestBody Courses courses) throws Exception{
-        return service.update(courses, id);
+    public ResponseEntity<EntityModel<CoursesDTO>> update(@PathVariable("id") Integer id, @RequestBody Courses courses) throws Exception {
+        Courses cur = service.update(courses, id);
+        EntityModel<CoursesDTO> courseResource = assembler.toModel(cur);
+        return ResponseEntity.ok(courseResource);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") Integer id) throws Exception{
+    public ResponseEntity<Void> delete(@PathVariable("id") Integer id) throws Exception{
         service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
