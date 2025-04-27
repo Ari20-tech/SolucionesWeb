@@ -18,6 +18,7 @@ public class StudentServiceImpl implements IStudentService {
 
     @Override
     public Student update(Student student, Integer id) throws Exception {
+        student.setIdStudent(id);
         return rep.save(student);
     }
 

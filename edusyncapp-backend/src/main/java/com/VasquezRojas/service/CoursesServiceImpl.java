@@ -19,6 +19,7 @@ public class CoursesServiceImpl implements ICoursesService {
 
     @Override
     public Courses update(Courses courses, Integer id) throws Exception {
+
         return repo.save(courses);
     }
 

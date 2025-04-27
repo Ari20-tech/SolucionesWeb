@@ -21,7 +21,7 @@ public class Student {
     private String lastName;
 
     @Column(nullable = false, name = "emailEstudiante", length = 50)
-    private Integer email;
+    private String email;
 
     @Column(nullable = false, name = "celular", length = 50)
     private String telefono;
